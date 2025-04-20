@@ -1,0 +1,22 @@
+print(" Scanning for pet-related remotes...")
+
+local rs = game:GetService("ReplicatedStorage")
+
+for i, v in pairs(rs:GetDescendants()) do
+    if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+        if string.lower(v.Name):find("pet") then
+            print("🔧 Remote Found: "..v.Name.." | Type: "..v.ClassName)
+        end
+    end
+end
+
+for _,v in pairs(getgc(true)) do
+    if typeof(v) == "function" and getfenv(v).script then
+        local info = debug.getinfo(v)
+        if info.name and string.lower(info.name):find("pet") then
+            print("⚠️ Function Found: ", info.name, info.source)
+        end
+    end
+end
+
+print("✅ Scan complete. Check above for any remotes/functions you can test.")
