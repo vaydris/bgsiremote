@@ -43,13 +43,14 @@ local function spawnPet(petName)
     local pet = petsFolder:FindFirstChild(petName)
 
     if pet then
-        print("Spawning pet: " .. petName)
+        print("Pet found successfully: " .. petName)
         
         -- Replace this with the actual remote event name if needed
         local spawnRemote = replicatedStorage:WaitForChild("SpawnPet")
+        
         spawnRemote:FireServer(pet)
         
-        print(petName .. " has been spawned!")
+        print(petName .. " has been spawned successfully!")
     else
         print("Pet not found! Please check the pet name and try again.")
     end
