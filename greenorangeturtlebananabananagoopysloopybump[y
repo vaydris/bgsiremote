@@ -47,16 +47,31 @@ CloseButton.MouseButton1Click:Connect(function()
     ScreenGui:Destroy()
 end)
 
+-- Example pet models stored in ServerStorage (replace with actual models/IDs)
+local petModels = {
+    ["Dog"] = game.ServerStorage.Pets:FindFirstChild("DogPetModel"),   -- Replace with actual pet names and models
+    ["Cat"] = game.ServerStorage.Pets:FindFirstChild("CatPetModel"),   -- Replace with actual pet names and models
+    ["Dragon"] = game.ServerStorage.Pets:FindFirstChild("DragonPetModel"), -- Replace with actual pet names and models
+}
+
 -- Function to spawn the pet when the Spawn button is clicked
 SpawnButton.MouseButton1Click:Connect(function()
     local petName = TextBox.Text
     if petName and petName ~= "" then
-        -- Replace this part with actual pet spawning logic, for now, it just prints the pet name
-        print("Spawning pet: " .. petName)
-        -- Example: Create a new pet object (you will need to adjust this part based on how pets work in BGSI)
-        -- local pet = Instance.new("Model")  -- or use an actual pet model from the game
-        -- pet.Parent = game.Workspace
-        -- pet.Name = petName
+        local petModel = petModels[petName]  -- Look up the pet model by name
+
+        if petModel then
+            print("Spawning pet: " .. petName)
+            
+            -- Clone the pet model and set its parent to the workspace
+            local newPet = petModel:Clone()
+            newPet.Parent = game.Workspace
+            
+            -- Optionally, you can set the pet's position relative to the player
+            newPet:SetPrimaryPartCFrame(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame)
+        else
+            print("Pet model not found!")
+        end
     else
         print("Please enter a pet name.")
     end
