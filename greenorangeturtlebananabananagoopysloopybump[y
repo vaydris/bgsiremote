@@ -34,6 +34,31 @@ SpawnButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
 SpawnButton.Text = "Spawn Pet"
 SpawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 
+-- Make the Frame draggable
+local dragging = false
+local dragInput, dragStart, startPos
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+    end
+end)
+
+Frame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local delta = input.Position - dragStart
+        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+Frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
 -- Function to spawn the pet
 local function spawnPet(petName)
     local replicatedStorage = game:GetService("ReplicatedStorage")
