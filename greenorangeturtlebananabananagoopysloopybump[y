@@ -29,86 +29,35 @@ CloseButton.TextSize = 20
 
 -- Set up the TextBox (for entering the pet name)
 TextBox.Parent = Frame
-TextBox.Size = UDim2.new(0, 260, 0, 40)
-TextBox.Position = UDim2.new(0, 20, 0, 40)
-TextBox.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-TextBox.Text = "Enter Pet Name"
-TextBox.TextColor3 = Color3.fromRGB(0, 0, 0)
+TextBox.Size = UDim2.new(0, 260, 0, 40)  -- Make sure the TextBox size is correctly set
+TextBox.Position = UDim2.new(0, 20, 0, 30)
+TextBox.PlaceholderText = "Enter Pet Name"
 
--- Set up the SpawnButton
+-- Set up the Spawn Button
 SpawnButton.Parent = Frame
 SpawnButton.Size = UDim2.new(0, 260, 0, 40)
-SpawnButton.Position = UDim2.new(0, 20, 0, 100)
-SpawnButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+SpawnButton.Position = UDim2.new(0, 20, 0, 80)
+SpawnButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 SpawnButton.Text = "Spawn Pet"
 SpawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpawnButton.TextSize = 20
 
--- Make the Frame draggable
-local dragging = false
-local dragInput, dragStart, startPos
-
-Frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = Frame.Position
-    end
-end)
-
-Frame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
-        local delta = input.Position - dragStart
-        Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
-Frame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- Close Button functionality (X to close the GUI)
+-- Function to close the GUI when the Close button is clicked
 CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()  -- This destroys the entire GUI
-    print("Pet Spawner GUI closed.")
+    ScreenGui:Destroy()
 end)
 
--- Function to spawn the pet
-local function spawnPet(petName)
-    local replicatedStorage = game:GetService("ReplicatedStorage")
-    local petsFolder = replicatedStorage:WaitForChild("Pets")
-
-    -- Check if the pet exists in the folder
-    local pet = petsFolder:FindFirstChild(petName)
-
-    if pet then
-        print("Pet found successfully: " .. petName)
-        
-        -- Check if you need to use a different remote event for spawning the pet
-        local spawnRemote = replicatedStorage:WaitForChild("SpawnPet")
-
-        -- Check if the spawnRemote exists before firing
-        if spawnRemote then
-            spawnRemote:FireServer(pet)
-            print(petName .. " has been spawned successfully!")
-        else
-            print("Error: SpawnPet remote not found.")
-        end
-    else
-        print("Pet not found! Please check the pet name and try again.")
-    end
-end
-
--- Button click event to spawn the pet
+-- Function to spawn the pet when the Spawn button is clicked
 SpawnButton.MouseButton1Click:Connect(function()
     local petName = TextBox.Text
-    if petName ~= "" then
-        spawnPet(petName)
+    if petName and petName ~= "" then
+        -- Replace this part with actual pet spawning logic, for now, it just prints the pet name
+        print("Spawning pet: " .. petName)
+        -- Example: Create a new pet object (you will need to adjust this part based on how pets work in BGSI)
+        -- local pet = Instance.new("Model")  -- or use an actual pet model from the game
+        -- pet.Parent = game.Workspace
+        -- pet.Name = petName
     else
-        print("Please enter a valid pet name.")
+        print("Please enter a pet name.")
     end
 end)
-
--- Wrapping the code in a loadstring to execute remotely (if needed)
-loadstring(game:HttpGet("https://raw.githubusercontent.com/vaydris/bgsiremote/refs/heads/main/greenorangeturtlebananabananagoopysloopybump%5By"))()
