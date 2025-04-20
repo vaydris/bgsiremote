@@ -39,47 +39,4 @@ TextBox.TextColor3 = Color3.fromRGB(0, 0, 0)
 SpawnButton.Parent = Frame
 SpawnButton.Size = UDim2.new(0, 260, 0, 40)
 SpawnButton.Position = UDim2.new(0, 20, 0, 100)
-SpawnButton.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
-SpawnButton.Text = "Spawn Pet"
-SpawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-
--- Function to spawn the pet
-local function spawnPet(petName)
-    local replicatedStorage = game:GetService("ReplicatedStorage")
-    local petsFolder = replicatedStorage:WaitForChild("Pets")
-
-    -- Check if the pet exists in the folder
-    local pet = petsFolder:FindFirstChild(petName)
-
-    if pet then
-        print("Pet found successfully: " .. petName)
-        
-        -- Replace this with the actual remote event name if needed
-        local spawnRemote = replicatedStorage:WaitForChild("SpawnPet")
-        
-        spawnRemote:FireServer(pet)
-        
-        print(petName .. " has been spawned successfully!")
-    else
-        print("Pet not found! Please check the pet name and try again.")
-    end
-end
-
--- Close Button functionality (X to close the GUI)
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()  -- This destroys the entire GUI
-    print("Pet Spawner GUI closed.")
-end)
-
--- Button click event to spawn the pet
-SpawnButton.MouseButton1Click:Connect(function()
-    local petName = TextBox.Text
-    if petName ~= "" then
-        spawnPet(petName)
-    else
-        print("Please enter a valid pet name.")
-    end
-end)
-
--- Now wrap it in a loadstring for execution
-loadstring(game:HttpGet("https://raw.githubusercontent.com/vaydris/bgsiremote/refs/heads/main/greenorangeturtlebananabananagoopysloopybump%5By"))()
+SpawnButton.BackgroundColor3 = Color3.fromRGB(0, 170,
