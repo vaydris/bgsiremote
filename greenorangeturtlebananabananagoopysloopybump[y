@@ -1,78 +1,37 @@
--- Pet Spawner GUI for BGSI
-print("Pet Spawner GUI Loaded!")
+-- Server-side Pet Spawner
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerStorage = game:GetService("ServerStorage")
 
--- Create GUI Elements
-local ScreenGui = Instance.new("ScreenGui")
-local Frame = Instance.new("Frame")
-local TextBox = Instance.new("TextBox")
-local SpawnButton = Instance.new("TextButton")
-local CloseButton = Instance.new("TextButton")  -- Close button (X)
+-- Create RemoteEvent if missing
+local spawnEvent = ReplicatedStorage:FindFirstChild("SpawnPetEvent")
+if not spawnEvent then
+    spawnEvent = Instance.new("RemoteEvent")
+    spawnEvent.Name = "SpawnPetEvent"
+    spawnEvent.Parent = ReplicatedStorage
+end
 
--- Set up the ScreenGui
-ScreenGui.Parent = game.Players.LocalPlayer.PlayerGui
-ScreenGui.Name = "PetSpawnerGUI"
-
--- Set up the Frame
-Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 300, 0, 200)
-Frame.Position = UDim2.new(0.5, -150, 0.5, -100)
-Frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-
--- Set up the Close Button (X)
-CloseButton.Parent = Frame
-CloseButton.Size = UDim2.new(0, 30, 0, 30)
-CloseButton.Position = UDim2.new(1, -40, 0, 10)
-CloseButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-CloseButton.Text = "X"
-CloseButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CloseButton.TextSize = 20
-
--- Set up the TextBox (for entering the pet name)
-TextBox.Parent = Frame
-TextBox.Size = UDim2.new(0, 260, 0, 40)  -- Make sure the TextBox size is correctly set
-TextBox.Position = UDim2.new(0, 20, 0, 30)
-TextBox.PlaceholderText = "Enter Pet Name"
-
--- Set up the Spawn Button
-SpawnButton.Parent = Frame
-SpawnButton.Size = UDim2.new(0, 260, 0, 40)
-SpawnButton.Position = UDim2.new(0, 20, 0, 80)
-SpawnButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-SpawnButton.Text = "Spawn Pet"
-SpawnButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-SpawnButton.TextSize = 20
-
--- Function to close the GUI when the Close button is clicked
-CloseButton.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
+-- Setup inventory folder for each player
+game.Players.PlayerAdded:Connect(function(player)
+    if not player:FindFirstChild("Inventory") then
+        local inv = Instance.new("Folder")
+        inv.Name = "Inventory"
+        inv.Parent = player
+    end
 end)
 
--- Example pet models stored in ServerStorage (replace with actual models/IDs)
-local petModels = {
-    ["Dog"] = game.ServerStorage.Pets:FindFirstChild("DogPetModel"),   -- Replace with actual pet names and models
-    ["Cat"] = game.ServerStorage.Pets:FindFirstChild("CatPetModel"),   -- Replace with actual pet names and models
-    ["Dragon"] = game.ServerStorage.Pets:FindFirstChild("DragonPetModel"), -- Replace with actual pet names and models
-}
-
--- Function to spawn the pet when the Spawn button is clicked
-SpawnButton.MouseButton1Click:Connect(function()
-    local petName = TextBox.Text
-    if petName and petName ~= "" then
-        local petModel = petModels[petName]  -- Look up the pet model by name
-
-        if petModel then
-            print("Spawning pet: " .. petName)
-            
-            -- Clone the pet model and set its parent to the workspace
-            local newPet = petModel:Clone()
-            newPet.Parent = game.Workspace
-            
-            -- Optionally, you can set the pet's position relative to the player
-            newPet:SetPrimaryPartCFrame(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame)
+-- When client requests a pet
+spawnEvent.OnServerEvent:Connect(function(player, petName)
+    if petName == "King Doggy" then
+        local petTemplate = ServerStorage:FindFirstChild("Pets") and ServerStorage.Pets:FindFirstChild("King Doggy")
+        if petTemplate then
+            local petClone = petTemplate:Clone()
+            petClone.Name = "King Doggy"
+            petClone.Parent = player.Inventory
+            print(player.Name .. " was given King Doggy!")
         else
-            print("Pet model not found!")
+            warn("King Doggy model not found in ServerStorage.Pets")
         end
     else
-        print("Please enter a pet name.")
+        warn(player.Name .. " tried to spawn an unknown pet: " .. petName)
     end
 end)
