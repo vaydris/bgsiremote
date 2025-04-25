@@ -1,102 +1,82 @@
--- BGSI Utility Script with OrionLib
--- Features: Auto Blow, Auto Sell, Auto Farm, Anti-AFK
+local Keybind = "F"
 
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = OrionLib:MakeWindow({Name = "BGSI Script Hub", HidePremium = false, SaveConfig = true, ConfigFolder = "BGSI_Hub"})
+local SessionID = string.gsub(tostring(math.random()):sub(3), "%d", function(c)
+    return string.char(96 + math.random(1, 26))
+end)
+print(' | Running BigPaintball2.lua made by Astro with keybind ' .. Keybind .. '! [SessionID ' .. SessionID .. ']')
 
-local FarmingTab = Window:MakeTab({Name = "Farming", Icon = "rbxassetid://4483345998", PremiumOnly = false})
-local MiscTab = Window:MakeTab({Name = "Misc", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local Enabled = false
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Workspace = game:GetService("Workspace")
 
--- Auto Blow Bubbles
-local autoBlow = false
-FarmingTab:AddToggle({
-    Name = "Auto Blow Bubbles",
-    Default = false,
-    Callback = function(Value)
-        autoBlow = Value
-        while autoBlow do
-            game:GetService("ReplicatedStorage").Remotes.BlowBubble:FireServer()
-            wait(0.1)
-        end
+-- Fehlerprotokollierung und Schutz
+local function safeExecute(func)
+    local success, errorMessage = pcall(func)
+    if not success then
+        warn(' | Error occurred: ' .. errorMessage .. ' [SessionID ' .. SessionID .. ']')
     end
-})
+end
 
--- Auto Sell Bubbles
-local autoSell = false
-local sellAmount = 1000000
-FarmingTab:AddToggle({
-    Name = "Auto Sell Bubbles",
-    Default = false,
-    Callback = function(Value)
-        autoSell = Value
-    end
-})
+-- Gegner und Spieler an festen Positionen teleportieren
+local function teleportEntities(cframe, team)
+    local spawnPosition = cframe * CFrame.new(0, 0, -15) -- Feste Position vor dem Spieler
 
-FarmingTab:AddTextbox({
-    Name = "Sell At Bubble Size",
-    Default = "1000000",
-    TextDisappear = false,
-    Callback = function(Value)
-        sellAmount = tonumber(Value)
-    end
-})
-
--- Auto Farm Gems/Coins
-local autoFarm = false
-local farmDelay = 3
-FarmingTab:AddToggle({
-    Name = "Auto Farm Coins/Gems",
-    Default = false,
-    Callback = function(Value)
-        autoFarm = Value
-    end
-})
-
-FarmingTab:AddSlider({
-    Name = "Farm Delay (Seconds)",
-    Min = 3,
-    Max = 60,
-    Default = 3,
-    Increment = 1,
-    ValueName = "s",
-    Callback = function(Value)
-        farmDelay = Value
-    end
-})
-
-spawn(function()
-    while true do
-        if autoSell then
-            local bubbles = game.Players.LocalPlayer.leaderstats.Bubbles.Value
-            if bubbles >= sellAmount then
-                game:GetService("ReplicatedStorage").Remotes.SellBubbles:FireServer()
+    -- Verarbeiten von EntitÃ¤ten
+    for _, entity in ipairs(Workspace.__THINGS.__ENTITIES:GetChildren()) do
+        if entity:FindFirstChild("HumanoidRootPart") then
+            local humanoidRootPart = entity.HumanoidRootPart
+            humanoidRootPart.CanCollide = false
+            humanoidRootPart.Anchored = true
+            humanoidRootPart.CFrame = spawnPosition
+        elseif entity:FindFirstChild("Hitbox") then
+            local directory = entity:GetAttribute("Directory")
+            if not (directory == "White" and entity:GetAttribute("OwnerUID") == LocalPlayer.UserId) and
+               (not team or directory ~= team.Name) then
+                entity.Hitbox.CanCollide = false
+                entity.Hitbox.Anchored = true
+                entity.Hitbox.CFrame = spawnPosition * CFrame.new(math.random(-5, 5), 0, math.random(-5, 5))
             end
         end
+    end
 
-        if autoFarm then
-            for _,v in pairs(workspace:GetDescendants()) do
-                if v:IsA("TouchTransmitter") and v.Parent then
-                    firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 0)
-                    firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 1)
+    -- Verarbeiten von Spielern
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if not team or team.Name ~= player.Team.Name then
+                if not player.Character:FindFirstChild("ForceField") then
+                    local humanoidRootPart = player.Character.HumanoidRootPart
+                    humanoidRootPart.CanCollide = false
+                    humanoidRootPart.Anchored = true
+                    humanoidRootPart.CFrame = spawnPosition * CFrame.new(math.random(-5, 5), 0, math.random(-5, 5))
                 end
             end
-            wait(farmDelay)
         end
-        wait(0.5)
+    end
+end
+
+-- Eingabeerkennung fÃ¼r das Umschalten
+UserInputService.InputBegan:Connect(function(input, gameProcessedEvent)
+    if input.KeyCode == Enum.KeyCode[Keybind] and not gameProcessedEvent then
+        Enabled = not Enabled
+        if Enabled then
+            print(' | Enabled BigPaintball2.lua [SessionID ' .. SessionID .. ']')
+        else
+            print(' | Disabled BigPaintball2.lua [SessionID ' .. SessionID .. ']')
+        end
     end
 end)
 
--- Anti-AFK
-MiscTab:AddButton({
-    Name = "Enable Anti-AFK",
-    Callback = function()
-        local VirtualUser = game:service("VirtualUser")
-        game:service("Players").LocalPlayer.Idled:connect(function()
-            VirtualUser:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-            wait(1)
-            VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
-        end)
-    end
-})
+-- Hauptschleife
+while wait(0.1) do -- Optimierte Aktualisierungsrate
+    safeExecute(function()
+        if not Enabled or not LocalPlayer.Character or not LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            return
+        end
 
-OrionLib:Init()
+        local cframe = LocalPlayer.Character.HumanoidRootPart.CFrame -- Spielerposition
+        local team = LocalPlayer.Team -- Spielerteam
+        teleportEntities(cframe, team)
+    end)
+end
