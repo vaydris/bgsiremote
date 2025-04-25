@@ -1,37 +1,142 @@
--- Server-side Pet Spawner
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local ServerStorage = game:GetService("ServerStorage")
+-- Lua Script for Bubble Gum Simulator: Infinity (BGSI)
 
--- Create RemoteEvent if missing
-local spawnEvent = ReplicatedStorage:FindFirstChild("SpawnPetEvent")
-if not spawnEvent then
-    spawnEvent = Instance.new("RemoteEvent")
-    spawnEvent.Name = "SpawnPetEvent"
-    spawnEvent.Parent = ReplicatedStorage
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local workspace = game:GetService("Workspace")
+
+-- Auto Blow Bubbles
+local function autoBlowBubbles()
+    while true do
+        -- Assuming 'BlowBubble' is the event to blow bubbles
+        game:GetService("ReplicatedStorage").Events.BlowBubble:FireServer()
+        wait(0.5)  -- Wait time between bubble blows, adjust as needed
+    end
 end
 
--- Setup inventory folder for each player
-game.Players.PlayerAdded:Connect(function(player)
-    if not player:FindFirstChild("Inventory") then
-        local inv = Instance.new("Folder")
-        inv.Name = "Inventory"
-        inv.Parent = player
+-- Auto Sell Bubbles
+local function autoSellBubbles()
+    local bubbleSizeGoal = 1000000 -- Set your goal here, adjust as needed
+    while true do
+        local bubbleSize = player.leaderstats.Bubbles.Value -- Get current bubble size
+        if bubbleSize >= bubbleSizeGoal then
+            -- Assuming the function to sell is linked to a certain event or button
+            game:GetService("ReplicatedStorage").Events.SellBubbles:FireServer()
+            wait(1)  -- Wait before checking again
+        end
+        wait(5)  -- Check every 5 seconds
     end
+end
+
+-- Anti-AFK (Jump every 18 minutes)
+local function antiAfk()
+    while true do
+        -- Assuming the 'Jump' event is triggered through ReplicatedStorage
+        game:GetService("ReplicatedStorage").Events.Jump:FireServer()
+        wait(1080)  -- Wait for 18 minutes (1080 seconds)
+    end
+end
+
+-- Auto Farm (Collect Gems and Coins with Adjustable Timer)
+local farmDelay = 3  -- Default delay (3 seconds)
+local function autoFarm()
+    while true do
+        -- Loop through all objects in the workspace
+        for _, object in pairs(workspace:GetChildren()) do
+            -- Check if the object is a gem or coin and if it is visible
+            if object:IsA("Model") and (object.Name == "Gem" or object.Name == "Coin") then
+                -- Assuming gems and coins have a Click event or a way to collect them
+                if object:FindFirstChild("ClickDetector") then
+                    -- Simulate a click on the gem or coin to collect it
+                    fireclickdetector(object.ClickDetector)
+                end
+            end
+        end
+        wait(farmDelay)  -- Wait before checking again, delay is controlled by slider
+    end
+end
+
+-- Start Auto Blow Bubbles
+spawn(autoBlowBubbles)
+
+-- Start Auto Sell Bubbles
+spawn(autoSellBubbles)
+
+-- Start Anti-AFK
+spawn(antiAfk)
+
+-- Start Auto Farm
+spawn(autoFarm)
+
+-- Display GUI elements
+local ScreenGui = Instance.new("ScreenGui", playerGui)
+local blowBubblesButton = Instance.new("TextButton")
+blowBubblesButton.Text = "Toggle Auto Blow Bubbles"
+blowBubblesButton.Size = UDim2.new(0, 200, 0, 50)
+blowBubblesButton.Position = UDim2.new(0, 10, 0, 10)
+blowBubblesButton.Parent = ScreenGui
+
+blowBubblesButton.MouseButton1Click:Connect(function()
+    -- Toggle Auto Blow Bubbles feature
+    spawn(autoBlowBubbles)
 end)
 
--- When client requests a pet
-spawnEvent.OnServerEvent:Connect(function(player, petName)
-    if petName == "King Doggy" then
-        local petTemplate = ServerStorage:FindFirstChild("Pets") and ServerStorage.Pets:FindFirstChild("King Doggy")
-        if petTemplate then
-            local petClone = petTemplate:Clone()
-            petClone.Name = "King Doggy"
-            petClone.Parent = player.Inventory
-            print(player.Name .. " was given King Doggy!")
-        else
-            warn("King Doggy model not found in ServerStorage.Pets")
-        end
-    else
-        warn(player.Name .. " tried to spawn an unknown pet: " .. petName)
-    end
+-- Auto Sell Bubbles Button
+local sellBubblesButton = Instance.new("TextButton")
+sellBubblesButton.Text = "Toggle Auto Sell Bubbles"
+sellBubblesButton.Size = UDim2.new(0, 200, 0, 50)
+sellBubblesButton.Position = UDim2.new(0, 10, 0, 70)
+sellBubblesButton.Parent = ScreenGui
+
+sellBubblesButton.MouseButton1Click:Connect(function()
+    -- Toggle Auto Sell Bubbles feature
+    spawn(autoSellBubbles)
 end)
+
+-- Anti-AFK Button
+local antiAfkButton = Instance.new("TextButton")
+antiAfkButton.Text = "Toggle Anti-AFK"
+antiAfkButton.Size = UDim2.new(0, 200, 0, 50)
+antiAfkButton.Position = UDim2.new(0, 10, 0, 130)
+antiAfkButton.Parent = ScreenGui
+
+antiAfkButton.MouseButton1Click:Connect(function()
+    -- Toggle Anti-AFK feature
+    spawn(antiAfk)
+end)
+
+-- Auto Farm Button
+local autoFarmButton = Instance.new("TextButton")
+autoFarmButton.Text = "Toggle Auto Farm"
+autoFarmButton.Size = UDim2.new(0, 200, 0, 50)
+autoFarmButton.Position = UDim2.new(0, 10, 0, 190)
+autoFarmButton.Parent = ScreenGui
+
+autoFarmButton.MouseButton1Click:Connect(function()
+    -- Toggle Auto Farm feature
+    spawn(autoFarm)
+end)
+
+-- Slider for Auto Farm Delay (3 to 60 seconds)
+local sliderLabel = Instance.new("TextLabel")
+sliderLabel.Text = "Farm Delay: " .. farmDelay .. "s"
+sliderLabel.Size = UDim2.new(0, 200, 0, 50)
+sliderLabel.Position = UDim2.new(0, 10, 0, 250)
+sliderLabel.Parent = ScreenGui
+
+local slider = Instance.new("Slider")
+slider.Size = UDim2.new(0, 200, 0, 50)
+slider.Position = UDim2.new(0, 10, 0, 310)
+slider.MinValue = 3  -- Minimum 3 seconds
+slider.MaxValue = 60  -- Maximum 60 seconds
+slider.Value = farmDelay  -- Initial value is 3 seconds
+slider.Parent = ScreenGui
+
+-- Update the farmDelay when the slider is moved
+slider.Changed:Connect(function()
+    farmDelay = slider.Value
+    sliderLabel.Text = "Farm Delay: " .. farmDelay .. "s"
+end)
+
+-- More buttons and GUI elements can be added here for other features
