@@ -1,113 +1,102 @@
--- Load OrionLib
+-- BGSI Utility Script with OrionLib
+-- Features: Auto Blow, Auto Sell, Auto Farm, Anti-AFK
+
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local Window = OrionLib:MakeWindow({Name = "BGSI Script Hub", HidePremium = false, SaveConfig = true, ConfigFolder = "BGSI_Hub"})
 
-local Window = OrionLib:MakeWindow({
-    Name = "BGSI Hub",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "BGSIHub"
-})
-
-local FarmingTab = Window:MakeTab({
-    Name = "Farming",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-local MiscTab = Window:MakeTab({
-    Name = "Misc",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- Variables
-local autoBlow = false
-local autoSell = false
-local autoFarm = false
-local farmDelay = 5
-
--- Anti-AFK
-local VirtualUser = game:GetService("VirtualUser")
-game:GetService("Players").LocalPlayer.Idled:Connect(function()
-    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    wait(1)
-    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-end)
+local FarmingTab = Window:MakeTab({Name = "Farming", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local MiscTab = Window:MakeTab({Name = "Misc", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
 -- Auto Blow Bubbles
-function BlowLoop()
-    while autoBlow do
-        game:GetService("ReplicatedStorage").Remotes.BlowBubble:FireServer()
-        wait(0.1)
-    end
-end
-
--- Auto Sell Bubbles
-function SellLoop()
-    while autoSell do
-        game:GetService("ReplicatedStorage").Remotes.SellBubble:FireServer()
-        wait(1)
-    end
-end
-
--- Auto Farm Gems/Coins
-function FarmLoop()
-    while autoFarm do
-        for _,v in pairs(game:GetService("Workspace").Currency:GetChildren()) do
-            if v:IsA("Part") and v:FindFirstChild("TouchInterest") then
-                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v, 0)
-                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v, 1)
-            end
-        end
-        wait(farmDelay)
-    end
-end
-
--- FarmingTab Toggles
+local autoBlow = false
 FarmingTab:AddToggle({
     Name = "Auto Blow Bubbles",
     Default = false,
     Callback = function(Value)
         autoBlow = Value
-        if autoBlow then
-            BlowLoop()
+        while autoBlow do
+            game:GetService("ReplicatedStorage").Remotes.BlowBubble:FireServer()
+            wait(0.1)
         end
     end
 })
 
+-- Auto Sell Bubbles
+local autoSell = false
+local sellAmount = 1000000
 FarmingTab:AddToggle({
     Name = "Auto Sell Bubbles",
     Default = false,
     Callback = function(Value)
         autoSell = Value
-        if autoSell then
-            SellLoop()
-        end
     end
 })
 
+FarmingTab:AddTextbox({
+    Name = "Sell At Bubble Size",
+    Default = "1000000",
+    TextDisappear = false,
+    Callback = function(Value)
+        sellAmount = tonumber(Value)
+    end
+})
+
+-- Auto Farm Gems/Coins
+local autoFarm = false
+local farmDelay = 3
 FarmingTab:AddToggle({
-    Name = "Auto Farm Gems/Coins",
+    Name = "Auto Farm Coins/Gems",
     Default = false,
     Callback = function(Value)
         autoFarm = Value
-        if autoFarm then
-            FarmLoop()
-        end
     end
 })
 
 FarmingTab:AddSlider({
-    Name = "Auto Farm Delay (Seconds)",
+    Name = "Farm Delay (Seconds)",
     Min = 3,
     Max = 60,
-    Default = 5,
-    Color = Color3.fromRGB(255, 255, 255),
+    Default = 3,
     Increment = 1,
-    ValueName = "sec",
+    ValueName = "s",
     Callback = function(Value)
         farmDelay = Value
     end
 })
 
-MiscTab:AddParagraph("Anti-AFK","Enabled automatically to keep you in-game.")
+spawn(function()
+    while true do
+        if autoSell then
+            local bubbles = game.Players.LocalPlayer.leaderstats.Bubbles.Value
+            if bubbles >= sellAmount then
+                game:GetService("ReplicatedStorage").Remotes.SellBubbles:FireServer()
+            end
+        end
+
+        if autoFarm then
+            for _,v in pairs(workspace:GetDescendants()) do
+                if v:IsA("TouchTransmitter") and v.Parent then
+                    firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 0)
+                    firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 1)
+                end
+            end
+            wait(farmDelay)
+        end
+        wait(0.5)
+    end
+end)
+
+-- Anti-AFK
+MiscTab:AddButton({
+    Name = "Enable Anti-AFK",
+    Callback = function()
+        local VirtualUser = game:service("VirtualUser")
+        game:service("Players").LocalPlayer.Idled:connect(function()
+            VirtualUser:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+            wait(1)
+            VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+        end)
+    end
+})
+
+OrionLib:Init()
