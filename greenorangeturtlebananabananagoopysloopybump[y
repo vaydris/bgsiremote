@@ -1,113 +1,113 @@
--- BGSI Ultimate Script Hub (GUI + Features)
--- Runs on DELTA Executor
-
--- OrionLib setup
+-- Load OrionLib
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
-local Window = OrionLib:MakeWindow({Name = "BGSI Hub | Ultimate", HidePremium = false, SaveConfig = true, ConfigFolder = "BGSI_Hub"})
+
+local Window = OrionLib:MakeWindow({
+    Name = "BGSI Hub",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "BGSIHub"
+})
+
+local FarmingTab = Window:MakeTab({
+    Name = "Farming",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+local MiscTab = Window:MakeTab({
+    Name = "Misc",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
 -- Variables
 local autoBlow = false
 local autoSell = false
-local antiAfk = false
 local autoFarm = false
-local autoFarmDelay = 3
+local farmDelay = 5
 
--- Tabs
-local farmingTab = Window:MakeTab({Name = "Farming", Icon = "rbxassetid://4483345998", PremiumOnly = false})
-local miscTab = Window:MakeTab({Name = "Misc", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+-- Anti-AFK
+local VirtualUser = game:GetService("VirtualUser")
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+    VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+    wait(1)
+    VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+end)
 
--- Functions
-function blowBubbles()
+-- Auto Blow Bubbles
+function BlowLoop()
     while autoBlow do
-        game:GetService("ReplicatedStorage").Events.BlowBubble:FireServer()
+        game:GetService("ReplicatedStorage").Remotes.BlowBubble:FireServer()
         wait(0.1)
     end
 end
 
-function sellBubbles()
+-- Auto Sell Bubbles
+function SellLoop()
     while autoSell do
-        game:GetService("ReplicatedStorage").Events.SellBubble:InvokeServer()
+        game:GetService("ReplicatedStorage").Remotes.SellBubble:FireServer()
         wait(1)
     end
 end
 
-function runAntiAfk()
-    while antiAfk do
-        game:GetService("VirtualInputManager"):SendKeyEvent(true, "Space", false, game)
-        wait(1)
-        game:GetService("VirtualInputManager"):SendKeyEvent(false, "Space", false, game)
-        wait(60 * 18) -- 18 minutes
-    end
-end
-
-function runAutoFarm()
+-- Auto Farm Gems/Coins
+function FarmLoop()
     while autoFarm do
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("TouchTransmitter") and v.Parent then
-                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 0)
-                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v.Parent, 1)
+        for _,v in pairs(game:GetService("Workspace").Currency:GetChildren()) do
+            if v:IsA("Part") and v:FindFirstChild("TouchInterest") then
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v, 0)
+                firetouchinterest(game.Players.LocalPlayer.Character.HumanoidRootPart, v, 1)
             end
         end
-        wait(autoFarmDelay)
+        wait(farmDelay)
     end
 end
 
--- Farming tab toggles
-farmingTab:AddToggle({
+-- FarmingTab Toggles
+FarmingTab:AddToggle({
     Name = "Auto Blow Bubbles",
     Default = false,
-    Callback = function(value)
-        autoBlow = value
-        if value then
-            spawn(blowBubbles)
+    Callback = function(Value)
+        autoBlow = Value
+        if autoBlow then
+            BlowLoop()
         end
     end
 })
 
-farmingTab:AddToggle({
+FarmingTab:AddToggle({
     Name = "Auto Sell Bubbles",
     Default = false,
-    Callback = function(value)
-        autoSell = value
-        if value then
-            spawn(sellBubbles)
+    Callback = function(Value)
+        autoSell = Value
+        if autoSell then
+            SellLoop()
         end
     end
 })
 
-farmingTab:AddToggle({
+FarmingTab:AddToggle({
     Name = "Auto Farm Gems/Coins",
     Default = false,
-    Callback = function(value)
-        autoFarm = value
-        if value then
-            spawn(runAutoFarm)
+    Callback = function(Value)
+        autoFarm = Value
+        if autoFarm then
+            FarmLoop()
         end
     end
 })
 
-farmingTab:AddSlider({
+FarmingTab:AddSlider({
     Name = "Auto Farm Delay (Seconds)",
     Min = 3,
     Max = 60,
     Default = 5,
+    Color = Color3.fromRGB(255, 255, 255),
     Increment = 1,
-    ValueName = "s",
-    Callback = function(value)
-        autoFarmDelay = value
+    ValueName = "sec",
+    Callback = function(Value)
+        farmDelay = Value
     end
 })
 
--- Misc tab
-miscTab:AddToggle({
-    Name = "Anti-AFK",
-    Default = false,
-    Callback = function(value)
-        antiAfk = value
-        if value then
-            spawn(runAntiAfk)
-        end
-    end
-})
-
-OrionLib:Init()
+MiscTab:AddParagraph("Anti-AFK","Enabled automatically to keep you in-game.")
